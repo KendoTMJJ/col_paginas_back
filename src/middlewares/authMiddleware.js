@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const tokenBlacklist = require('../utils/tokenBlacklist');
 
 const verifyToken = (req, res, next) => {
   try {
@@ -12,6 +13,10 @@ const verifyToken = (req, res, next) => {
 
     if (type !== 'Bearer' || !token) {
       return res.status(401).json({ message: 'Formato de token inválido' });
+    }
+
+    if (tokenBlacklist.has(token)) {
+      return res.status(401).json({ message: 'Token inválido o expirado' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
