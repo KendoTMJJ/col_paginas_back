@@ -19,4 +19,11 @@ router.post(
   userController.createUser
 );
 
+router.put(
+  '/:id/password',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  userController.changeUserPasswordByAdmin
+);
+
 module.exports = router;

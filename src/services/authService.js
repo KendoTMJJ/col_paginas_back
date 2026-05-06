@@ -55,6 +55,126 @@ const login = async ({ username, password }) => {
   };
 };
 
+const forgotPassword = async ({ identifier }) => {
+  if (!identifier) {
+    throw new Error('Debe ingresar usuario o correo electrónico');
+  }
+
+  const user = await authRepository.findUserByUsernameOrEmail(identifier);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  if (user.estado !== 'activo') {
+    throw new Error('El usuario se encuentra inactivo');
+  }
+
+  if (!user.pregunta_seguridad || !user.respuesta_seguridad_hash) {
+    throw new Error('El usuario no tiene configurada una pregunta de seguridad');
+  }
+
+  return {
+    message: 'Pregunta de seguridad encontrada',
+    username: user.username,
+    pregunta_seguridad: user.pregunta_seguridad,
+  };
+};
+
+const resetPassword = async ({ username, respuesta_seguridad, nueva_password }) => {
+  if (!username || !respuesta_seguridad || !nueva_password) {
+    throw new Error('Usuario, respuesta de seguridad y nueva contraseña son obligatorios');
+  }
+
+  const user = await authRepository.findUserByUsername(username);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  if (user.estado !== 'activo') {
+    throw new Error('El usuario se encuentra inactivo');
+  }
+
+  if (!user.respuesta_seguridad_hash) {
+    throw new Error('El usuario no tiene configurada una respuesta de seguridad');
+  }
+
+  const isValidAnswer = await bcrypt.compare(
+    respuesta_seguridad,
+    user.respuesta_seguridad_hash
+  );
+
+  if (!isValidAnswer) {
+    throw new Error('La respuesta de seguridad es incorrecta');
+  }
+
+  const passwordHash = bcrypt.hashSync(nueva_password, 10);
+
+  await authRepository.updatePassword(user.id, passwordHash);
+
+  return {
+    message: 'Contraseña restaurada correctamente',
+  };
+};
+
+const changeOwnPassword = async (userFromToken, { password_actual, nueva_password }) => {
+  if (!password_actual || !nueva_password) {
+    throw new Error('La contraseña actual y la nueva contraseña son obligatorias');
+  }
+
+  const user = await authRepository.findUserByUsername(userFromToken.username);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const isValidPassword = await bcrypt.compare(password_actual, user.password_hash);
+
+  if (!isValidPassword) {
+    throw new Error('La contraseña actual es incorrecta');
+  }
+
+  const passwordHash = bcrypt.hashSync(nueva_password, 10);
+
+  await authRepository.updatePassword(user.id, passwordHash);
+
+  return {
+    message: 'Contraseña actualizada correctamente',
+  };
+};
+
+const updateSecurityQuestion = async (userFromToken, payload) => {
+  const { pregunta_seguridad, respuesta_seguridad } = payload;
+
+  if (!pregunta_seguridad || !respuesta_seguridad) {
+    throw new Error('La pregunta y la respuesta de seguridad son obligatorias');
+  }
+
+  const user = await authRepository.findUserByUsername(userFromToken.username);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const respuestaHash = bcrypt.hashSync(respuesta_seguridad, 10);
+
+  await authRepository.updateSecurityQuestion(
+    user.id,
+    pregunta_seguridad,
+    respuestaHash
+  );
+
+  return {
+    message: 'Pregunta de seguridad actualizada correctamente',
+  };
+};
+
+
 module.exports = {
   login,
+  forgotPassword,
+  resetPassword,
+  changeOwnPassword,
+  updateSecurityQuestion,
 };

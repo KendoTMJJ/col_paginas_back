@@ -27,7 +27,22 @@ const createUser = async (req, res) => {
   }
 };
 
+const changeUserPasswordByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await userService.changeUserPasswordByAdmin(id, req.body);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   listUsers,
   createUser,
+  changeUserPasswordByAdmin,
 };
