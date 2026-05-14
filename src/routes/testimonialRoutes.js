@@ -25,6 +25,13 @@ router.get(
   testimonialController.listTestimonials
 );
 
+router.get(
+  '/:id',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  testimonialController.getTestimonial
+);
+
 router.post(
   '/',
   verifyToken,
@@ -37,6 +44,13 @@ router.put(
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
   testimonialController.updateTestimonial
+);
+
+router.patch(
+  '/:id/status',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais'),
+  testimonialController.toggleTestimonialStatus
 );
 
 router.delete(

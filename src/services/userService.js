@@ -5,6 +5,16 @@ const getUsers = async () => {
   return await userRepository.findAllUsers();
 };
 
+const getUserById = async (id) => {
+  const user = await userRepository.findUserById(id);
+
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  return user;
+};
+
 const createUser = async (payload) => {
   const {
     nombre,
@@ -50,6 +60,60 @@ const createUser = async (payload) => {
   });
 };
 
+const updateUser = async (id, payload) => {
+  const existing = await userRepository.findUserByIdRaw(id);
+
+  if (!existing) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const allowedFields = ['nombre', 'apellido', 'email', 'pais_id', 'rol_id'];
+  const updatePayload = {};
+
+  allowedFields.forEach((field) => {
+    if (payload[field] !== undefined) {
+      updatePayload[field] = payload[field];
+    }
+  });
+
+  if (Object.keys(updatePayload).length === 0) {
+    throw new Error('No se proporcionaron campos válidos para actualizar');
+  }
+
+  updatePayload.updated_at = new Date().toISOString();
+
+  const updated = await userRepository.updateUser(id, updatePayload);
+
+  return {
+    message: 'Usuario actualizado correctamente',
+    data: updated,
+  };
+};
+
+const toggleUserStatus = async (id, estado) => {
+  const existing = await userRepository.findUserByIdRaw(id);
+
+  if (!existing) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const allowedStates = ['activo', 'inactivo'];
+
+  if (!estado || !allowedStates.includes(estado)) {
+    throw new Error('Estado no válido. Use "activo" o "inactivo"');
+  }
+
+  const updated = await userRepository.updateUser(id, {
+    estado,
+    updated_at: new Date().toISOString(),
+  });
+
+  return {
+    message: 'Estado del usuario actualizado correctamente',
+    data: updated,
+  };
+};
+
 const changeUserPasswordByAdmin = async (id, payload) => {
   const { nueva_password } = payload;
 
@@ -57,7 +121,7 @@ const changeUserPasswordByAdmin = async (id, payload) => {
     throw new Error('La nueva contraseña es obligatoria');
   }
 
-  const user = await userRepository.findUserById(id);
+  const user = await userRepository.findUserByIdRaw(id);
 
   if (!user) {
     throw new Error('Usuario no encontrado');
@@ -73,8 +137,26 @@ const changeUserPasswordByAdmin = async (id, payload) => {
   };
 };
 
+const deleteUser = async (id) => {
+  const existing = await userRepository.findUserByIdRaw(id);
+
+  if (!existing) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  await userRepository.deleteUser(id);
+
+  return {
+    message: 'Usuario eliminado correctamente',
+  };
+};
+
 module.exports = {
   getUsers,
+  getUserById,
   createUser,
+  updateUser,
+  toggleUserStatus,
   changeUserPasswordByAdmin,
+  deleteUser,
 };

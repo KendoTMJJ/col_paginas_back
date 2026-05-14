@@ -4,12 +4,29 @@ const isValidEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-const getRequests = async (user) => {
+const getRequests = async (user, filters = {}) => {
   if (user.rol === 'superadmin') {
-    return await contactRequestRepository.findAllRequests();
+    return await contactRequestRepository.findAllRequests(filters);
   }
 
-  return await contactRequestRepository.findRequestsByCountry(user.pais_id);
+  return await contactRequestRepository.findRequestsByCountry(user.pais_id, filters);
+};
+
+const getRequestById = async (id, user) => {
+  const request = await contactRequestRepository.findRequestDetailById(id);
+
+  if (!request) {
+    throw new Error('La solicitud no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(request.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para ver esta solicitud');
+  }
+
+  return request;
 };
 
 const createPublicRequest = async (payload) => {
@@ -104,6 +121,7 @@ const deleteRequest = async (id, user) => {
 
 module.exports = {
   getRequests,
+  getRequestById,
   createPublicRequest,
   updateRequestStatus,
   deleteRequest,

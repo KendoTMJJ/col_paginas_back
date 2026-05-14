@@ -33,6 +33,13 @@ router.get(
   newsController.listNews
 );
 
+router.get(
+  '/:id',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  newsController.getNewsItem
+);
+
 router.post(
   '/',
   verifyToken,
@@ -45,6 +52,13 @@ router.put(
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
   newsController.updateNews
+);
+
+router.patch(
+  '/:id/status',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  newsController.toggleNewsStatus
 );
 
 router.delete(

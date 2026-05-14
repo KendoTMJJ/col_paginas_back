@@ -8,6 +8,23 @@ const getTestimonials = async (user) => {
   return await testimonialRepository.findTestimonialsByCountry(user.pais_id);
 };
 
+const getTestimonialById = async (id, user) => {
+  const testimonial = await testimonialRepository.findTestimonialById(id);
+
+  if (!testimonial) {
+    throw new Error('El testimonio no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(testimonial.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para ver este testimonio');
+  }
+
+  return testimonial;
+};
+
 const getPublicTestimonialsByCountry = async (countrySlug) => {
   if (!countrySlug) {
     throw new Error('El país es obligatorio');
@@ -115,6 +132,42 @@ const updateTestimonial = async (id, payload, user) => {
   return await testimonialRepository.updateTestimonial(id, updatePayload);
 };
 
+const toggleTestimonialStatus = async (id, estado, user) => {
+  const existing = await testimonialRepository.findTestimonialById(id);
+
+  if (!existing) {
+    throw new Error('El testimonio no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(existing.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para modificar este testimonio');
+  }
+
+  const allowedStates = ['borrador', 'publicado'];
+
+  if (!estado || !allowedStates.includes(estado)) {
+    throw new Error('Estado no válido. Use "borrador" o "publicado"');
+  }
+
+  const updatePayload = {
+    estado,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (estado === 'publicado' && existing.estado !== 'publicado') {
+    updatePayload.fecha_publicacion = new Date().toISOString();
+  }
+
+  if (estado === 'borrador') {
+    updatePayload.fecha_publicacion = null;
+  }
+
+  return await testimonialRepository.updateTestimonial(id, updatePayload);
+};
+
 const deleteTestimonial = async (id, user) => {
   const existingTestimonial = await testimonialRepository.findTestimonialById(id);
 
@@ -142,8 +195,10 @@ const deleteTestimonial = async (id, user) => {
 
 module.exports = {
   getTestimonials,
+  getTestimonialById,
   getPublicTestimonialsByCountry,
   createTestimonial,
   updateTestimonial,
+  toggleTestimonialStatus,
   deleteTestimonial,
 };

@@ -6,7 +6,7 @@ const generateSlug = (text) => {
     .toLowerCase()
     .trim()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
@@ -18,6 +18,23 @@ const getNews = async (user) => {
   }
 
   return await newsRepository.findNewsByCountry(user.pais_id);
+};
+
+const getNewsById = async (id, user) => {
+  const news = await newsRepository.findNewsById(id);
+
+  if (!news) {
+    throw new Error('La noticia no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(news.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para ver esta noticia');
+  }
+
+  return news;
 };
 
 const getPublicNewsByCountry = async (countrySlug) => {
@@ -136,6 +153,42 @@ const updateNews = async (id, payload, user) => {
   return await newsRepository.updateNews(id, updatePayload);
 };
 
+const toggleNewsStatus = async (id, estado, user) => {
+  const existing = await newsRepository.findNewsById(id);
+
+  if (!existing) {
+    throw new Error('La noticia no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(existing.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para modificar esta noticia');
+  }
+
+  const allowedStates = ['borrador', 'publicado'];
+
+  if (!estado || !allowedStates.includes(estado)) {
+    throw new Error('Estado no válido. Use "borrador" o "publicado"');
+  }
+
+  const updatePayload = {
+    estado,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (estado === 'publicado' && existing.estado !== 'publicado') {
+    updatePayload.fecha_publicacion = new Date().toISOString();
+  }
+
+  if (estado === 'borrador') {
+    updatePayload.fecha_publicacion = null;
+  }
+
+  return await newsRepository.updateNews(id, updatePayload);
+};
+
 const deleteNews = async (id, user) => {
   const existingNews = await newsRepository.findNewsById(id);
 
@@ -163,9 +216,11 @@ const deleteNews = async (id, user) => {
 
 module.exports = {
   getNews,
+  getNewsById,
   getPublicNewsByCountry,
   getPublicNewsDetail,
   createNews,
   updateNews,
+  toggleNewsStatus,
   deleteNews,
 };

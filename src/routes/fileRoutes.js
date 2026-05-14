@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 
-const contactRequestController = require('../controllers/contactRequestController');
+const fileController = require('../controllers/fileController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 
 /*
-  RUTA PÚBLICA
+  RUTAS PÚBLICAS
 */
 
-router.post(
-  '/public',
-  contactRequestController.createPublicRequest
+router.get(
+  '/public/:countrySlug',
+  fileController.listPublicFiles
 );
 
 /*
@@ -22,28 +22,28 @@ router.get(
   '/',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  contactRequestController.listRequests
+  fileController.listFiles
 );
 
 router.get(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  contactRequestController.getRequest
+  fileController.getFile
 );
 
-router.put(
-  '/:id/status',
+router.post(
+  '/',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais'),
-  contactRequestController.updateRequestStatus
+  fileController.registerFile
 );
 
 router.delete(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais'),
-  contactRequestController.deleteRequest
+  fileController.deleteFile
 );
 
 module.exports = router;

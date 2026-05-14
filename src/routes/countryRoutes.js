@@ -6,6 +6,13 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 
 router.get(
+  '/active',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  countryController.listActiveCountries
+);
+
+router.get(
   '/',
   verifyToken,
   authorizeRoles('superadmin'),
@@ -13,10 +20,31 @@ router.get(
 );
 
 router.get(
-  '/active',
+  '/:id',
   verifyToken,
-  authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  countryController.listActiveCountries
+  authorizeRoles('superadmin'),
+  countryController.getCountry
+);
+
+router.post(
+  '/',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  countryController.createCountry
+);
+
+router.put(
+  '/:id',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  countryController.updateCountry
+);
+
+router.patch(
+  '/:id/status',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  countryController.toggleCountryStatus
 );
 
 module.exports = router;
