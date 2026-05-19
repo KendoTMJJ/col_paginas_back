@@ -4,19 +4,12 @@ const router = express.Router();
 const testimonialController = require('../controllers/testimonialController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
-
-/*
-  RUTAS PÚBLICAS
-*/
+const upload = require('../middlewares/uploadMiddleware');
 
 router.get(
   '/public/:countrySlug',
   testimonialController.listPublicTestimonials
 );
-
-/*
-  RUTAS ADMINISTRATIVAS
-*/
 
 router.get(
   '/',
@@ -46,11 +39,20 @@ router.put(
   testimonialController.updateTestimonial
 );
 
+// Editor incluido — corrige bug anterior que lo excluía
 router.patch(
   '/:id/status',
   verifyToken,
-  authorizeRoles('superadmin', 'admin_pais'),
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
   testimonialController.toggleTestimonialStatus
+);
+
+router.patch(
+  '/:id/photo',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  upload.single('foto'),
+  testimonialController.uploadTestimonialPhoto
 );
 
 router.delete(

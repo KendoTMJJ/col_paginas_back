@@ -1,25 +1,9 @@
 const supabase = require('../config/supabase');
 
 const DETAIL_SELECT = `
-  id,
-  nombre,
-  nombre_original,
-  tipo_mime,
-  tamano,
-  url,
-  created_at,
-  paises (
-    id,
-    nombre,
-    codigo,
-    slug
-  ),
-  usuarios (
-    id,
-    nombre,
-    apellido,
-    email
-  )
+  id, nombre, nombre_original, tipo_mime, tamano, url, created_at,
+  paises ( id, nombre, codigo, slug ),
+  usuarios ( id, nombre, apellido, email )
 `;
 
 const findAllFiles = async () => {
@@ -29,7 +13,6 @@ const findAllFiles = async () => {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
   return data;
 };
 
@@ -41,7 +24,6 @@ const findFilesByCountry = async (paisId) => {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
   return data;
 };
 
@@ -49,25 +31,13 @@ const findFilesByCountrySlug = async (countrySlug) => {
   const { data, error } = await supabase
     .from('archivos')
     .select(`
-      id,
-      nombre,
-      nombre_original,
-      tipo_mime,
-      tamano,
-      url,
-      created_at,
-      paises!inner (
-        id,
-        nombre,
-        codigo,
-        slug
-      )
+      id, nombre, nombre_original, tipo_mime, tamano, url, created_at,
+      paises!inner ( id, nombre, codigo, slug )
     `)
     .eq('paises.slug', countrySlug)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
   return data;
 };
 
@@ -79,7 +49,6 @@ const findFileById = async (id) => {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-
   return data;
 };
 
@@ -91,7 +60,18 @@ const createFile = async (payload) => {
     .single();
 
   if (error) throw new Error(error.message);
+  return data;
+};
 
+const updateFile = async (id, payload) => {
+  const { data, error } = await supabase
+    .from('archivos')
+    .update(payload)
+    .eq('id', id)
+    .select(DETAIL_SELECT)
+    .single();
+
+  if (error) throw new Error(error.message);
   return data;
 };
 
@@ -110,5 +90,6 @@ module.exports = {
   findFilesByCountrySlug,
   findFileById,
   createFile,
+  updateFile,
   deleteFile,
 };

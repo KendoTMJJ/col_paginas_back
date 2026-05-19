@@ -33,11 +33,19 @@ router.put(
   userController.updateUser
 );
 
+// PATCH parcial — debe ir ANTES de /:id/status
 router.patch(
   '/:id/status',
   verifyToken,
   authorizeRoles('superadmin'),
   userController.toggleUserStatus
+);
+
+router.patch(
+  '/:id',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  userController.updateUser
 );
 
 router.put(
@@ -47,11 +55,19 @@ router.put(
   userController.changeUserPasswordByAdmin
 );
 
+// DELETE /:id/permanent debe ir ANTES de DELETE /:id
+router.delete(
+  '/:id/permanent',
+  verifyToken,
+  authorizeRoles('superadmin'),
+  userController.deleteUser
+);
+
 router.delete(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin'),
-  userController.deleteUser
+  userController.deactivateUser
 );
 
 module.exports = router;

@@ -5,6 +5,12 @@ const countryController = require('../controllers/countryController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 
+// Público — sin autenticación (para landing y formulario de contacto)
+router.get(
+  '/public',
+  countryController.listActiveCountries
+);
+
 router.get(
   '/active',
   verifyToken,

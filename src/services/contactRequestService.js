@@ -29,6 +29,15 @@ const getRequestById = async (id, user) => {
   return request;
 };
 
+const FINALIDADES_VALIDAS = [
+  'Información general',
+  'Alianza estratégica',
+  'Oportunidad de negocio',
+  'Voluntariado',
+  'Prensa y medios',
+  'Otro',
+];
+
 const createPublicRequest = async (payload) => {
   const {
     pais_id,
@@ -45,6 +54,10 @@ const createPublicRequest = async (payload) => {
 
   if (!isValidEmail(correo)) {
     throw new Error('El correo electrónico no tiene un formato válido');
+  }
+
+  if (!FINALIDADES_VALIDAS.includes(finalidad)) {
+    throw new Error(`Finalidad no válida. Opciones: ${FINALIDADES_VALIDAS.join(', ')}`);
   }
 
   return await contactRequestRepository.createRequest({
