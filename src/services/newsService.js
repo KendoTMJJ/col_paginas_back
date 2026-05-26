@@ -76,12 +76,14 @@ const updateNews = async (id, payload, user) => {
     throw new Error('No tiene permisos para modificar esta noticia');
   }
 
-  const allowedFields = ['titulo', 'resumen', 'contenido', 'imagen_principal_url', 'estado'];
+  const allowedFields = ['titulo', 'resumen', 'contenido', 'imagen_principal_url', 'estado', 'pais_id'];
   const updatePayload = {};
 
   allowedFields.forEach((field) => {
     if (payload[field] !== undefined) updatePayload[field] = payload[field];
   });
+
+  if (user.rol !== 'superadmin') updatePayload.pais_id = user.pais_id;
 
   if (payload.titulo) updatePayload.slug = generateSlug(payload.titulo);
 

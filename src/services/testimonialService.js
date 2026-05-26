@@ -63,13 +63,15 @@ const updateTestimonial = async (id, payload, user) => {
 
   const allowedFields = [
     'nombre', 'cargo', 'empresa', 'contenido', 'foto_url',
-    'instagram_url', 'facebook_url', 'estado', 'destacado',
+    'instagram_url', 'facebook_url', 'estado', 'destacado', 'pais_id',
   ];
 
   const updatePayload = {};
   allowedFields.forEach((field) => {
     if (payload[field] !== undefined) updatePayload[field] = payload[field];
   });
+
+  if (user.rol !== 'superadmin') updatePayload.pais_id = user.pais_id;
 
   if (payload.estado === 'publicado' && existingTestimonial.estado !== 'publicado') {
     updatePayload.fecha_publicacion = new Date().toISOString();
