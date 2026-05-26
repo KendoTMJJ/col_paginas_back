@@ -4,13 +4,39 @@ const isValidEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-const getRequests = async (user) => {
+const getRequests = async (user, filters = {}) => {
   if (user.rol === 'superadmin') {
-    return await contactRequestRepository.findAllRequests();
+    return await contactRequestRepository.findAllRequests(filters);
   }
 
-  return await contactRequestRepository.findRequestsByCountry(user.pais_id);
+  return await contactRequestRepository.findRequestsByCountry(user.pais_id, filters);
 };
+
+const getRequestById = async (id, user) => {
+  const request = await contactRequestRepository.findRequestDetailById(id);
+
+  if (!request) {
+    throw new Error('La solicitud no existe');
+  }
+
+  if (
+    user.rol !== 'superadmin' &&
+    Number(request.pais_id) !== Number(user.pais_id)
+  ) {
+    throw new Error('No tiene permisos para ver esta solicitud');
+  }
+
+  return request;
+};
+
+const FINALIDADES_VALIDAS = [
+  'Información general',
+  'Alianza estratégica',
+  'Oportunidad de negocio',
+  'Voluntariado',
+  'Prensa y medios',
+  'Otro',
+];
 
 const createPublicRequest = async (payload) => {
   const {
@@ -28,6 +54,10 @@ const createPublicRequest = async (payload) => {
 
   if (!isValidEmail(correo)) {
     throw new Error('El correo electrónico no tiene un formato válido');
+  }
+
+  if (!FINALIDADES_VALIDAS.includes(finalidad)) {
+    throw new Error(`Finalidad no válida. Opciones: ${FINALIDADES_VALIDAS.join(', ')}`);
   }
 
   return await contactRequestRepository.createRequest({
@@ -104,6 +134,7 @@ const deleteRequest = async (id, user) => {
 
 module.exports = {
   getRequests,
+  getRequestById,
   createPublicRequest,
   updateRequestStatus,
   deleteRequest,

@@ -1,65 +1,58 @@
 const express = require('express');
 const router = express.Router();
 
-const testimonialController = require('../controllers/testimonialController');
+const fileController = require('../controllers/fileController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
 router.get(
   '/public/:countrySlug',
-  testimonialController.listPublicTestimonials
+  fileController.listPublicFiles
 );
 
 router.get(
   '/',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  testimonialController.listTestimonials
+  fileController.listFiles
 );
 
 router.get(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  testimonialController.getTestimonial
+  fileController.getFile
+);
+
+// POST /upload debe ir ANTES de POST / para no ser eclipsado
+router.post(
+  '/upload',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  upload.single('archivo'),
+  fileController.uploadFile
 );
 
 router.post(
   '/',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  testimonialController.createTestimonial
+  fileController.registerFile
 );
 
 router.put(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  testimonialController.updateTestimonial
-);
-
-// Editor incluido — corrige bug anterior que lo excluía
-router.patch(
-  '/:id/status',
-  verifyToken,
-  authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  testimonialController.toggleTestimonialStatus
-);
-
-router.patch(
-  '/:id/photo',
-  verifyToken,
-  authorizeRoles('superadmin', 'admin_pais', 'editor'),
-  upload.single('foto'),
-  testimonialController.uploadTestimonialPhoto
+  fileController.updateFile
 );
 
 router.delete(
   '/:id',
   verifyToken,
   authorizeRoles('superadmin', 'admin_pais'),
-  testimonialController.deleteTestimonial
+  fileController.deleteFile
 );
 
 module.exports = router;

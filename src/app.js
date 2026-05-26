@@ -11,6 +11,10 @@ const countryRoutes = require('./routes/countryRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const testimonialRoutes = require('./routes/testimonialRoutes');
 const contactRequestRoutes = require('./routes/contactRequestRoutes');
+const fileRoutes = require('./routes/fileRoutes');
+const auditRoutes = require('./routes/auditRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const rolesRoutes = require('./routes/rolesRoutes');
 
 const app = express();
 
@@ -34,6 +38,10 @@ app.use('/api/countries', countryRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/contact-requests', contactRequestRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/roles', rolesRoutes);
 
 // Servidor
 const PORT = process.env.PORT || 3001;

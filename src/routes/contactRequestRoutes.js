@@ -5,24 +5,24 @@ const contactRequestController = require('../controllers/contactRequestControlle
 const { verifyToken } = require('../middlewares/authMiddleware');
 const { authorizeRoles } = require('../middlewares/roleMiddleware');
 
-/*
-  RUTA PÚBLICA
-*/
-
 router.post(
   '/public',
   contactRequestController.createPublicRequest
 );
 
-/*
-  RUTAS ADMINISTRATIVAS
-*/
-
+// Editor no gestiona contactos (corrige bug anterior)
 router.get(
   '/',
   verifyToken,
-  authorizeRoles('superadmin', 'admin_pais', 'editor'),
+  authorizeRoles('superadmin', 'admin_pais'),
   contactRequestController.listRequests
+);
+
+router.get(
+  '/:id',
+  verifyToken,
+  authorizeRoles('superadmin', 'admin_pais'),
+  contactRequestController.getRequest
 );
 
 router.put(
